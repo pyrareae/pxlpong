@@ -17,6 +17,10 @@ screen = {
     y = 48,
     scale=10
 }
+collborder = {
+        left = 0,
+        right = screen.x - player1.thickness - 3
+    }
 canvas = love.graphics.newCanvas(screen.x,screen.y)
 function initgame() --init/reset game state
     alive = true
@@ -30,15 +34,24 @@ end
 
 function love.load()
     font = love.graphics.newFont("pixelart.ttf", 8)
-    collborder = {
-        left = 10,
-        right = screen.x - player1.thickness - 5
+    sounds = {
+        bounce = love.audio.newSource("bounce.wav")
     }
     initgame()
 end
 
 function love.update(dt)
+    --misc input
+    if love.keyboard.isDown('q') then
+        love.event.push('quit')
+    end
     if not alive then
+        if love.keyboard.isDown('r') then
+            initgame()
+        end
+        return
+    end
+    if inmenu then
         
     end
     --paddle logic
@@ -57,24 +70,30 @@ function love.update(dt)
     ball.x = ball.x + ball.xVel * dt
     ball.y = ball.y + ball.yVel * dt
     --collision check
-    if ball.x + ball.size >= collborder.right then
+    if ball.x + ball.size >= collborder.right then--right border
         if ball.y+ball.size >= player1.y and ball.y <= player1.y + player1.len then --hit paddle
             ball.xVel = -ball.xVel
-            local rand =  math.random(-20, 20)
-            local veer = ball.y-ball.size/2 - player1.y-player1.len/2
-            ball.yVel = veer*1.5
+            local rand =  math.random(-1, 1)
+            local veer = (ball.y+ball.size/2) - (player1.y+player1.len/2)
+            ball.yVel = veer*3+rand*2
             ball.xVel = ball.xVel + 2
             ball.x = collborder.right - ball.size
+            sounds.bounce:setPitch(1.5)
+            sounds.bounce:play()
         else -- died!
             alive = false
         end
     end
-    if ball.x < collborder.left then
+    if ball.x < collborder.left then--left border
         ball.xVel = -ball.xVel
         ball.x = collborder.left
+        sounds.bounce:setPitch(1)
+        sounds.bounce:play()
     end
-    if ball.y < 0 or ball.y+ball.size > screen.y then
+    if ball.y < 0 or ball.y+ball.size > screen.y then--top/bottom walls
         ball.yVel = -ball.yVel
+        sounds.bounce:setPitch(1)
+        sounds.bounce:play()
     end
 end
 
@@ -87,13 +106,15 @@ function love.draw()
     
     if not alive then
         love.graphics.setColor(255,255,255)
-        love.graphics.printf("Game Over", 0, 20, screen.x, 'center')
+        love.graphics.printf("Game Over\n\nRestart..R\n\nQuit..Q", 0, 5, screen.x, 'center')
+    elseif inmenu then
+        
     else
         love.graphics.setLineWidth(1)
         love.graphics.setLineStyle('rough')
-        --bleh
+        --decorations
         love.graphics.setColor(200,200,200)
-        love.graphics.rectangle('fill', 5, 0, 5, love.graphics:getHeight())
+        love.graphics.rectangle('fill', screen.x/2, 0, 1, screen.y)
         --love.graphics.rectangle('fill', collborder.right, 0, 5, love.graphics:getHeight())
         --draw paddes
         love.graphics.setColor(255,255,255)
@@ -105,5 +126,6 @@ function love.draw()
     
     love.graphics.setCanvas()
 --     love.graphics.setBlendMode("alpha", "premultiplied")
+    love.graphics.setColor(255,255,255)
     love.graphics.draw(canvas, 0,0,0, screen.scale, screen.scale)
 end
