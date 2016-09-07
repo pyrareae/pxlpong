@@ -9,7 +9,8 @@ player2 = {
     y = 0,
     x = 0,
     len = 10,
-    thickness =3
+    thickness =3,
+    speed = 75
 }
 ball = {
     x = 0,
@@ -36,6 +37,8 @@ colors = {
 canvas = love.graphics.newCanvas(screen.x,screen.y)
 difficulty = 2
 difficulties = {"easy", "normal", "hard"}
+multiplayer = false
+menuline = 0
 score = {
     player = 0,
     deaths = 0,
@@ -73,14 +76,23 @@ end
 function love.keypressed(key, sc, r)
     local length = table.getn(difficulties)
     if not r and inmenu then
-        if key == "up" then
-            -- (test) ? cond1 : cond2
-            difficulty = (difficulty+1 > length) and 1 or difficulty+1
-        elseif key == "down" then
-            difficulty = (difficulty-1 <= 0) and length or difficulty-1
-        elseif key == "return" then 
-            score.limit = score.limits[difficulty]--xxx
-            inmenu = false
+        if key == "up" or key == "down" then
+            menuline = menuline == 0 and 1 or 0
+        end
+        if menuline == 0 then
+            if key == "left" then
+                -- (test) ? cond1 : cond2
+                difficulty = (difficulty+1 > length) and 1 or difficulty+1
+            elseif key == "right" then
+                difficulty = (difficulty-1 <= 0) and length or difficulty-1
+            elseif key == "return" then 
+                score.limit = score.limits[difficulty]--xxx
+                inmenu = false
+            end
+        elseif menuline == 1 then
+            if key == "left" or key == "right" then
+                multiplayer = not multiplayer
+            end
         end
     end
             
@@ -190,16 +202,20 @@ function love.draw()
         love.graphics.setColor(colors.white)
         love.graphics.printf(string.format("Game Over\n%d:%d\nRestart..R\nQuit..Q", score.cpu, score.player), 0, 1, screen.x, 'center')
     elseif inmenu then
-        love.graphics.setColor(colors.gray)
+        love.graphics.setColor(colors.violet)
         love.graphics.printf("Pong", 0, 5, screen.x, 'center')
-        love.graphics.setColor(colors.white)
-        love.graphics.printf(string.format("Difficulty\n%s", difficulties[difficulty]), 0, 12, screen.x, 'center')
+        love.graphics.setColor(menuline == 0 and colors.white or colors.violet)
+        love.graphics.printf("Difficulty", 0, 13, screen.x, 'center')
+        love.graphics.printf(difficulties[difficulty], 0, 20, screen.x, 'center')
+        local mode = multiplayer and "multi" or "single"
+        love.graphics.setColor(menuline == 1 and colors.white or colors.violet)
+        love.graphics.printf(mode, 0,27,screen.x,'center')
     else
         love.graphics.setLineWidth(1)
         love.graphics.setLineStyle('rough')
         --decorations
-        love.graphics.setColor(255,255,255,150)
-        love.graphics.draw(kittyimg, 15,10)
+--         love.graphics.setColor(255,255,255,150)
+--         love.graphics.draw(kittyimg, 15,10)
         love.graphics.setColor(colors.darkGray)
         love.graphics.printf(string.format("%i-%i", score.cpu, score.player), 0, 5, screen.x, 'center')
         love.graphics.printf(string.format("%d/%d", score.deaths, score.limit), 0, 36, screen.x, 'center')
