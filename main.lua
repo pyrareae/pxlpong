@@ -32,7 +32,8 @@ colors = {
     white =  {255,255,255},
     gray =   {200,200,200},
     darkGray={100,100,100},
-    violet = {150,150,255}
+    violet = {150,150,255},
+    pink =   {255,70,170}
 }
 canvas = love.graphics.newCanvas(screen.x,screen.y)
 difficulty = 2
@@ -85,10 +86,10 @@ function love.keypressed(key, sc, r)
             inmenu = false
         end
         if menuline == 0 then
-            if key == "left" then
+            if key == "right" then
                 -- (test) ? cond1 : cond2
                 difficulty = (difficulty+1 > length) and 1 or difficulty+1
-            elseif key == "right" then
+            elseif key == "left" then
                 difficulty = (difficulty-1 <= 0) and length or difficulty-1
             end
         elseif menuline == 1 then
@@ -160,17 +161,18 @@ function love.update(dt)
     ball.x = ball.x + ball.xVel * dt
     ball.y = ball.y + ball.yVel * dt
     --collision check
-    function paddlecoll(player) 
+    function paddlecoll(player, pitch) 
+        pitch = pitch or 1.5
         ball.xVel = -ball.xVel
         local rand =  math.random(-1, 1)
         local veer = (ball.y+ball.size/2) - (player.y+player.len/2)
         ball.yVel = veer*3+rand*2
-        ball.xVel = ball.xVel + difficulty*2
-        sounds.bounce:setPitch(1.5)
+        ball.xVel = ball.xVel > 0 and ball.xVel + difficulty*2 or ball.xVel - difficulty*2
+        sounds.bounce:setPitch(pitch)
         sounds.bounce:play()
     end
     if ball.x + ball.size >= collborder.right then--right border
-        if ball.y+ball.size >= player1.y and ball.y <= player1.y + player1.len and math.abs((ball.x + ball.size) - collborder.right) <2 then --hit paddle
+        if ball.y+ball.size >= player1.y and ball.y <= player1.y + player1.len and math.abs((ball.x + ball.size) - collborder.right) <= ball.xVel*dt then --hit paddle
             paddlecoll(player1)
             ball.x = collborder.right - ball.size-1 --anti stick
         else --missed
@@ -189,7 +191,7 @@ function love.update(dt)
     if ball.x <= collborder.left then--left border
         if ball.y+ball.size >= player2.y and ball.y <= player2.y + player2.len then --hit paddle
             ball.x = collborder.left
-            paddlecoll(player2)
+            paddlecoll(player2,1.7)
         else
             score.player = score.player + 1
 --             score.cpu = score.cpu-1
@@ -212,7 +214,7 @@ function love.draw()
     
     if not alive then
         love.graphics.setColor(colors.white)
-        love.graphics.printf(string.format("Game Over\n%d:%d\nRestart..R\nQuit..Q", score.cpu, score.player), 0, 1, screen.x, 'center')
+        love.graphics.printf({{255,75,75}, "Game Over\n", colors.white, string.format("%d:%d\nRestart..R\nQuit..Q", score.cpu, score.player)}, 0, 1, screen.x, 'center')
     elseif inmenu then
         love.graphics.setColor(colors.violet)
         love.graphics.printf("Pong", 0, 5, screen.x, 'center')
@@ -250,7 +252,7 @@ function love.draw()
             love.graphics.rectangle('fill',x+math.random(-dist-1,dist), y+math.random(-dist-1,dist),1,1)
         end
         --draw paddles
-        love.graphics.setColor(colors.white)
+        love.graphics.setColor(multiplayer and colors.pink or colors.white)
         love.graphics.rectangle('line', player1.x, player1.y, player1.thickness, player1.len)    speed = 
         love.graphics.setColor(multiplayer and colors.violet or colors.gray)
         love.graphics.rectangle('line', player2.x, player2.y, player2.thickness, player2.len)
