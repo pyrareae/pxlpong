@@ -58,6 +58,7 @@ function initgame() --init/reset game state
     alive = true
     player1.x = collborder.right
     player1.y = screen.y/2
+    player2.y = screen.y/2
     player2.x = collborder.left-player2.thickness
     score.player = 0
     score.deaths = 0
@@ -78,6 +79,9 @@ function love.keypressed(key, sc, r)
     if not r and inmenu then
         if key == "up" or key == "down" then
             menuline = menuline == 0 and 1 or 0
+        elseif key == "return" then 
+            score.limit = score.limits[difficulty]
+            inmenu = false
         end
         if menuline == 0 then
             if key == "left" then
@@ -85,9 +89,6 @@ function love.keypressed(key, sc, r)
                 difficulty = (difficulty+1 > length) and 1 or difficulty+1
             elseif key == "right" then
                 difficulty = (difficulty-1 <= 0) and length or difficulty-1
-            elseif key == "return" then 
-                score.limit = score.limits[difficulty]--xxx
-                inmenu = false
             end
         elseif menuline == 1 then
             if key == "left" or key == "right" then
@@ -95,7 +96,6 @@ function love.keypressed(key, sc, r)
             end
         end
     end
-            
 end
 
 function love.update(dt)
@@ -103,13 +103,10 @@ function love.update(dt)
     if love.keyboard.isDown('q') then
         love.event.push('quit')
     end
-    if not alive then
-        if love.keyboard.isDown('r') or love.keyboard.isDown('return') then
-            initgame()
-        end
-        return
+    if love.keyboard.isDown('r') then
+        initgame()
     end
-    if inmenu then
+    if inmenu or not alive then
         return
     end
     --paddle logic
@@ -124,10 +121,15 @@ function love.update(dt)
             player1.y = screen.y - player1.len
         end
     end
-    --cpu paddle
-    do
+    --P2
+    if multiplayer then--peoples
+        if love.keyboard.isDown('a') then
+            player2.y = player2.y - player2.speed * dt
+        elseif love.keyboard.isDown('z') then 
+            player2.y = player2.y + player2.speed * dt
+        end
+    else--cpu paddle
         local last = player2.y
-        local jitter = math.random(-1,1)
         local cap = nil
         if difficulty == 1 then
             cap = 6
@@ -145,6 +147,13 @@ function love.update(dt)
                 player2.y = last+cap*dt
             end
         end
+    end
+    --stay in screen
+    if player2.y > screen.y - player2.len then
+        player2.y = screen.y - player2.len
+    end
+    if player2.y < 0 then
+        player2.y = 0
     end
     --ball logic
     ball.x = ball.x + ball.xVel * dt
@@ -166,11 +175,13 @@ function love.update(dt)
         else --missed
 --             score.player = score.player -1
             score.cpu = score.cpu+1
-            score.deaths = score.deaths+1
             resetball()
-            if score.deaths > score.limit then
-                print(score.deaths)
-                alive = false
+            if not multiplayer then
+                score.deaths = score.deaths+1
+                if score.deaths > score.limit then
+                    print(score.deaths)
+                    alive = false
+                end
             end
         end
     end
@@ -214,8 +225,10 @@ function love.draw()
         love.graphics.setLineWidth(1)
         love.graphics.setLineStyle('rough')
         --decorations
---         love.graphics.setColor(255,255,255,150)
---         love.graphics.draw(kittyimg, 15,10)
+        if multiplayer then
+            love.graphics.setColor(255,255,255,150)
+            love.graphics.draw(kittyimg, 15,10)
+        end
         love.graphics.setColor(colors.darkGray)
         love.graphics.printf(string.format("%i-%i", score.cpu, score.player), 0, 5, screen.x, 'center')
         love.graphics.printf(string.format("%d/%d", score.deaths, score.limit), 0, 36, screen.x, 'center')
@@ -236,7 +249,7 @@ function love.draw()
         --draw paddles
         love.graphics.setColor(colors.white)
         love.graphics.rectangle('line', player1.x, player1.y, player1.thickness, player1.len)    speed = 
-        love.graphics.setColor(colors.gray)
+        love.graphics.setColor(multiplayer and colors.violet or colors.gray)
         love.graphics.rectangle('line', player2.x, player2.y, player2.thickness, player2.len)
     end
     
