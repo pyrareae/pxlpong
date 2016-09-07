@@ -71,6 +71,7 @@ function love.load()
         bounce = love.audio.newSource("bounce.wav")
     }
     kittyimg = love.graphics.newImage("kitty.png")
+    pixelimg = love.graphics.newImage("pixelmask.png")
     initgame()
 end
 
@@ -244,7 +245,7 @@ function love.draw()
             local y = ball.y+ball.size/2
             love.graphics.setColor(math.random(200,255),math.random(200,255),math.random(200,255),math.random(25,100))
             local dist = 4*i/100
-            love.graphics.rectangle('fill',x+math.random(-dist,dist), y+math.random(-dist,dist),1,1)
+            love.graphics.rectangle('fill',x+math.random(-dist-1,dist), y+math.random(-dist-1,dist),1,1)
         end
         --draw paddles
         love.graphics.setColor(colors.white)
@@ -267,4 +268,7 @@ function love.draw()
 --     love.graphics.setBlendMode("alpha", "premultiplied")
     love.graphics.setColor(255,255,255,255)
     love.graphics.draw(canvas, 0,0,0, screen.scale, screen.scale)
+    love.graphics.setBlendMode("multiply")
+    love.graphics.draw(pixelimg,0,0)
+    love.graphics.setBlendMode("alpha")
 end
