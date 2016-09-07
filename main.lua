@@ -232,7 +232,9 @@ function love.draw()
         end
         love.graphics.setColor(colors.darkGray)
         love.graphics.printf(string.format("%i-%i", score.cpu, score.player), 0, 5, screen.x, 'center')
-        love.graphics.printf(string.format("%d/%d", score.deaths, score.limit), 0, 36, screen.x, 'center')
+        if not multiplayer then
+            love.graphics.printf(string.format("%d/%d", score.deaths, score.limit), 0, 36, screen.x, 'center')
+        end
         love.graphics.setColor(160,160,160,100)
         love.graphics.rectangle('fill', screen.x/2-1, 0, 1, screen.y)
         --love.graphics.rectangle('fill', collborder.right, 0, 5, love.graphics:getHeight())
