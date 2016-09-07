@@ -3,14 +3,13 @@ player1 = {
     x = 0,
     len = 10,
     thickness =3,
-    speed = 100
+    speed = 75
 }
 player2 = {
     y = 0,
     x = 0,
     len = 10,
-    thickness =3,
-    speed = 100
+    thickness =3
 }
 ball = {
     x = 0,
@@ -67,12 +66,13 @@ function love.load()
     sounds = {
         bounce = love.audio.newSource("bounce.wav")
     }
+    kittyimg = love.graphics.newImage("kitty.png")
     initgame()
 end
 
 function love.keypressed(key, sc, r)
     local length = table.getn(difficulties)
-    if not r then
+    if not r and inmenu then
         if key == "up" then
             -- (test) ? cond1 : cond2
             difficulty = (difficulty+1 > length) and 1 or difficulty+1
@@ -118,11 +118,11 @@ function love.update(dt)
         local jitter = math.random(-1,1)
         local cap = nil
         if difficulty == 1 then
-            cap = 3
-        elseif difficulty == 2 then
             cap = 6
+        elseif difficulty == 2 then
+            cap = 10
         elseif difficulty == 3 then
-            cap = 15
+            cap = 20
         end
         player2.y = ((ball.y+ball.size/2)-player2.len/2)
         local diff = player2.y - last
@@ -143,12 +143,12 @@ function love.update(dt)
         local rand =  math.random(-1, 1)
         local veer = (ball.y+ball.size/2) - (player.y+player.len/2)
         ball.yVel = veer*3+rand*2
-        ball.xVel = ball.xVel + 2
+        ball.xVel = ball.xVel + difficulty*2
         sounds.bounce:setPitch(1.5)
         sounds.bounce:play()
     end
     if ball.x + ball.size >= collborder.right then--right border
-        if ball.y+ball.size >= player1.y and ball.y <= player1.y + player1.len and math.abs((ball.x + ball.size) - collborder.right) <1 then --hit paddle
+        if ball.y+ball.size >= player1.y and ball.y <= player1.y + player1.len and math.abs((ball.x + ball.size) - collborder.right) <2 then --hit paddle
             paddlecoll(player1)
             ball.x = collborder.right - ball.size-1 --anti stick
         else --missed
@@ -198,21 +198,41 @@ function love.draw()
         love.graphics.setLineWidth(1)
         love.graphics.setLineStyle('rough')
         --decorations
-        love.graphics.setColor(colors.gray)
-        love.graphics.rectangle('fill', screen.x/2, 0, 1, screen.y)
+        love.graphics.setColor(255,255,255,150)
+        love.graphics.draw(kittyimg, 15,10)
         love.graphics.setColor(colors.darkGray)
-        love.graphics.printf(string.format("%i:%i", score.cpu, score.player), 0, 5, screen.x, 'center')
-        love.graphics.printf(string.format("%d/%d <3", score.deaths, score.limit), 0, 36, screen.x, 'center')
+        love.graphics.printf(string.format("%i-%i", score.cpu, score.player), 0, 5, screen.x, 'center')
+        love.graphics.printf(string.format("%d/%d", score.deaths, score.limit), 0, 36, screen.x, 'center')
+        love.graphics.setColor(160,160,160,100)
+        love.graphics.rectangle('fill', screen.x/2-1, 0, 1, screen.y)
         --love.graphics.rectangle('fill', collborder.right, 0, 5, love.graphics:getHeight())
         --draw ball
         love.graphics.setColor(colors.violet)
         love.graphics.rectangle('fill', ball.x, ball.y, ball.size, ball.size)
+        --ball sparkles
+        for i=1, 100 do
+            local x = ball.x+ball.size/2
+            local y = ball.y+ball.size/2
+            love.graphics.setColor(math.random(200,255),math.random(200,255),math.random(200,255),math.random(25,100))
+            local dist = 4*i/100
+            love.graphics.rectangle('fill',x+math.random(-dist,dist), y+math.random(-dist,dist),1,1)
+        end
         --draw paddles
         love.graphics.setColor(colors.white)
-        love.graphics.rectangle('line', player1.x, player1.y, player1.thickness, player1.len)
+        love.graphics.rectangle('line', player1.x, player1.y, player1.thickness, player1.len)    speed = 
         love.graphics.setColor(colors.gray)
         love.graphics.rectangle('line', player2.x, player2.y, player2.thickness, player2.len)
     end
+    
+    --noise effect
+    for y=0,screen.y do
+        for x=0,screen.x do
+            local color = math.random(0,255)
+            love.graphics.setColor(color,color,color,25)
+            love.graphics.rectangle('fill',x,y,1,1)
+        end
+    end
+    love.graphics.setColor(255,255,255,255)
     
     love.graphics.setCanvas()
 --     love.graphics.setBlendMode("alpha", "premultiplied")
