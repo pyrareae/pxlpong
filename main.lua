@@ -40,6 +40,7 @@ difficulty = 2
 difficulties = {"easy", "normal", "hard"}
 multiplayer = false
 menuline = 0
+lastmouse = 0
 score = {
     player = 0,
     deaths = 0,
@@ -73,6 +74,7 @@ function love.load()
     }
     kittyimg = love.graphics.newImage("kitty.png")
     pixelimg = love.graphics.newImage("pixelmask.png")
+    love.mouse.setVisible(false)
     initgame()
 end
 
@@ -123,6 +125,11 @@ function love.update(dt)
             player1.y = screen.y - player1.len
         end
     end
+    local mY = love.mouse.getY()
+    if lastmouse ~= mY then
+        player1.y = mY/screen.scale - player1.len/2
+        lastmouse = mY
+    end
     --P2
     if multiplayer then--peoples
         if love.keyboard.isDown('a') then
@@ -166,7 +173,7 @@ function love.update(dt)
         ball.xVel = -ball.xVel
         local rand =  math.random(-5, 5)
         local veer = (ball.y+ball.size/2) - (player.y+player.len/2)
-        ball.yVel = veer*4+rand*2
+        ball.yVel = veer*4+rand*3
         ball.xVel = ball.xVel > 0 and ball.xVel + difficulty*2 or ball.xVel - difficulty*2
         sounds.bounce:setPitch(pitch)
         sounds.bounce:play()
