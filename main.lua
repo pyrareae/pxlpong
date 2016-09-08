@@ -134,11 +134,11 @@ function love.update(dt)
         local last = player2.y
         local cap = nil
         if difficulty == 1 then
-            cap = 6
-        elseif difficulty == 2 then
             cap = 10
+        elseif difficulty == 2 then
+            cap = 18
         elseif difficulty == 3 then
-            cap = 20
+            cap = 25
         end
         player2.y = ((ball.y+ball.size/2)-player2.len/2)
         local diff = player2.y - last
@@ -164,9 +164,9 @@ function love.update(dt)
     function paddlecoll(player, pitch) 
         pitch = pitch or 1.5
         ball.xVel = -ball.xVel
-        local rand =  math.random(-1, 1)
+        local rand =  math.random(-5, 5)
         local veer = (ball.y+ball.size/2) - (player.y+player.len/2)
-        ball.yVel = veer*3+rand*2
+        ball.yVel = veer*4+rand*2
         ball.xVel = ball.xVel > 0 and ball.xVel + difficulty*2 or ball.xVel - difficulty*2
         sounds.bounce:setPitch(pitch)
         sounds.bounce:play()
@@ -182,7 +182,6 @@ function love.update(dt)
             if not multiplayer then
                 score.deaths = score.deaths+1
                 if score.deaths > score.limit then
-                    print(score.deaths)
                     alive = false
                 end
             end
