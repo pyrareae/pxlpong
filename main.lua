@@ -1,7 +1,7 @@
 fx = {
     crt = true,
     trail = true,
-    sparkle = false,
+    sparkle = true,
     grain = true
 }
 player1 = {
@@ -84,7 +84,7 @@ end
 function love.load()
     font = love.graphics.newFont("AerxFont.ttf", 16)
     sounds = {
-        bounce = love.audio.newSource("bounce.wav")
+        bounce = love.audio.newSource("bounce.ogg")
     }
     kittyimg = love.graphics.newImage("kitty.png")
     pixelimg = love.graphics.newImage("pixelmask.png")
@@ -211,8 +211,8 @@ function love.update(dt)
         if math.abs(ball.xVel) > cap then
             ball.xVel = ball.xVel > 0 and cap or -cap
         end
-        sounds.bounce:setPitch(pitch)
-        sounds.bounce:play()
+--         sounds.bounce:setPitch(pitch)
+--         sounds.bounce:play()
     end
     if ball.x + ball.size >= collborder.right then--right border
         if ball.y+ball.size >= player1.y and ball.y <= player1.y + player1.len and math.abs((ball.x + ball.size) - collborder.right) <= ball.xVel*dt then --hit paddle
@@ -242,8 +242,8 @@ function love.update(dt)
     end
     if ball.y < 0 or ball.y+ball.size > screen.y then--top/bottom walls
         ball.yVel = -ball.yVel*1.5
-        sounds.bounce:setPitch(1)
-        sounds.bounce:play()
+--         sounds.bounce:setPitch(1)
+--         sounds.bounce:play()
     end
 end
 
@@ -323,7 +323,7 @@ function love.draw()
     love.graphics.setColor(255,255,255,255)
     love.graphics.draw(canvas, screen:offset(),0,0, screen:scale(), screen:scale())
     if fx.crt then
-        love.graphics.setBlendMode("multiply")
+        love.graphics.setBlendMode("multiplicative")
         love.graphics.draw(pixelimg,screen:offset(),0,0,screen:scale()/10,screen:scale()/10)
         love.graphics.setBlendMode("alpha")
     end
