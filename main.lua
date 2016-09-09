@@ -28,7 +28,15 @@ ball = {
 screen = {
     x = 64,
     y = 48,
-    scale=20
+    scale= function(self)
+        local xs = love.graphics.getWidth()/self.x
+        local ys = love.graphics.getHeight()/self.y
+        return math.min(xs,ys)
+    end,
+    offset = function(self)
+        local off = (love.graphics.getWidth()-self.x*self:scale())/2
+        return off > 0 and off or 0
+    end
 }
 collborder = {
         left =  player2.thickness + 4,
@@ -144,7 +152,7 @@ function love.update(dt)
     end
     local mY = love.mouse.getY()
     if lastmouse ~= mY then
-        player1.y = mY/screen.scale - player1.len/2
+        player1.y = mY/screen:scale() - player1.len/2
         lastmouse = mY
     end
     --P2
@@ -304,7 +312,7 @@ function love.draw()
             for x=0,screen.x do
                 local color = math.random(0,255)
                 love.graphics.setColor(color,color,color,25)
-                love.graphics.rectangle('fill',x,y,1,1)
+                love.graphics.rectangle('fill',x+screen:offset(),y,1,1)
             end
         end
     end
@@ -313,10 +321,10 @@ function love.draw()
     love.graphics.setCanvas()
 --     love.graphics.setBlendMode("alpha", "premultiplied")
     love.graphics.setColor(255,255,255,255)
-    love.graphics.draw(canvas, 0,0,0, screen.scale, screen.scale)
+    love.graphics.draw(canvas, screen:offset(),0,0, screen:scale(), screen:scale())
     if fx.crt then
         love.graphics.setBlendMode("multiply")
-        love.graphics.draw(pixelimg,0,0,0,screen.scale/10,screen.scale/10)
+        love.graphics.draw(pixelimg,screen:offset(),0,0,screen:scale()/10,screen:scale()/10)
         love.graphics.setBlendMode("alpha")
     end
 end
