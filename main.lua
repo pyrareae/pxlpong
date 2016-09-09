@@ -1,3 +1,9 @@
+fx = {
+    crt = true,
+    trail = true,
+    sparkle = false,
+    grain = true
+}
 player1 = {
     y = 0,
     x = 0,
@@ -22,7 +28,7 @@ ball = {
 screen = {
     x = 64,
     y = 48,
-    scale=10
+    scale=20
 }
 collborder = {
         left =  player2.thickness + 4,
@@ -75,6 +81,14 @@ function love.load()
     kittyimg = love.graphics.newImage("kitty.png")
     pixelimg = love.graphics.newImage("pixelmask.png")
     love.mouse.setVisible(false)
+    local spk = love.graphics.newImage("spark.png")
+    trail = love.graphics.newParticleSystem(spk, 60)
+    trail:setParticleLifetime(1,2)
+    trail:setEmissionRate(20)
+    trail:setSizes(0.3, 1)
+    trail:setSizeVariation(1)
+    trail:setLinearAcceleration(-20,-20,20,20)
+    trail:setColors(170,50,255,255,255,0,0,0)
     initgame()
 end
 
@@ -103,6 +117,9 @@ function love.keypressed(key, sc, r)
 end
 
 function love.update(dt)
+    if fx.trail then
+        trail:update(dt)
+    end
     --misc input
     if love.keyboard.isDown('q') then
         love.event.push('quit')
@@ -169,12 +186,23 @@ function love.update(dt)
     ball.y = ball.y + ball.yVel * dt
     --collision check
     function paddlecoll(player, pitch) 
+        trail:emit(30)
         pitch = pitch or 1.5
         ball.xVel = -ball.xVel
         local rand =  math.random(-5, 5)
         local veer = (ball.y+ball.size/2) - (player.y+player.len/2)
+        if difficulty == 1 then
+            cap = 150
+        elseif difficulty == 2 then
+            cap = 200
+        elseif difficulty == 3 then
+            cap = 300
+        end
         ball.yVel = veer*4+rand*3
         ball.xVel = ball.xVel > 0 and ball.xVel + difficulty*2 or ball.xVel - difficulty*2
+        if math.abs(ball.xVel) > cap then
+            ball.xVel = ball.xVel > 0 and cap or -cap
+        end
         sounds.bounce:setPitch(pitch)
         sounds.bounce:play()
     end
@@ -205,7 +233,7 @@ function love.update(dt)
         end
     end
     if ball.y < 0 or ball.y+ball.size > screen.y then--top/bottom walls
-        ball.yVel = -ball.yVel
+        ball.yVel = -ball.yVel*1.5
         sounds.bounce:setPitch(1)
         sounds.bounce:play()
     end
@@ -250,12 +278,18 @@ function love.draw()
         love.graphics.setColor(colors.violet)
         love.graphics.rectangle('fill', ball.x, ball.y, ball.size, ball.size)
         --ball sparkles
-        for i=1, 100 do
-            local x = ball.x+ball.size/2
-            local y = ball.y+ball.size/2
-            love.graphics.setColor(math.random(200,255),math.random(200,255),math.random(200,255),math.random(25,100))
-            local dist = 4*i/100
-            love.graphics.rectangle('fill',x+math.random(-dist-1,dist), y+math.random(-dist-1,dist),1,1)
+        if fx.sparkle then
+            for i=1, 100 do
+                local x = ball.x+ball.size/2
+                local y = ball.y+ball.size/2
+                love.graphics.setColor(math.random(200,255),math.random(200,255),math.random(200,255),math.random(25,100))
+                local dist = 4*i/100
+                love.graphics.rectangle('fill',x+math.random(-dist-1,dist), y+math.random(-dist-1,dist),1,1)
+            end
+        end
+        if fx.trail then 
+            trail:setPosition(ball.x+ball.size/2, ball.y+ball.size/2)
+            love.graphics.draw(trail, 0,0)
         end
         --draw paddles
         love.graphics.setColor(multiplayer and colors.pink or colors.white)
@@ -265,11 +299,13 @@ function love.draw()
     end
     
     --noise effect
-    for y=0,screen.y do
-        for x=0,screen.x do
-            local color = math.random(0,255)
-            love.graphics.setColor(color,color,color,25)
-            love.graphics.rectangle('fill',x,y,1,1)
+    if fx.grain then
+        for y=0,screen.y do
+            for x=0,screen.x do
+                local color = math.random(0,255)
+                love.graphics.setColor(color,color,color,25)
+                love.graphics.rectangle('fill',x,y,1,1)
+            end
         end
     end
     love.graphics.setColor(255,255,255,255)
@@ -278,7 +314,9 @@ function love.draw()
 --     love.graphics.setBlendMode("alpha", "premultiplied")
     love.graphics.setColor(255,255,255,255)
     love.graphics.draw(canvas, 0,0,0, screen.scale, screen.scale)
-    love.graphics.setBlendMode("multiply")
-    love.graphics.draw(pixelimg,0,0)
-    love.graphics.setBlendMode("alpha")
+    if fx.crt then
+        love.graphics.setBlendMode("multiply")
+        love.graphics.draw(pixelimg,0,0,0,screen.scale/10,screen.scale/10)
+        love.graphics.setBlendMode("alpha")
+    end
 end
